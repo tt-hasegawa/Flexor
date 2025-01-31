@@ -1,0 +1,4 @@
+sample/out/*
+sample/temp/*
+sample/logs/*
+Tools/lib/*

@@ -158,55 +158,77 @@ def executeCustomSql(String query) {
     }
 }
 
-def importFileToDb(Map tables,String customQuery) {
+def importFileToDb(Map tables, String customQuery) {
     def conn = DriverManager.getConnection('jdbc:duckdb:temp/db')
     def db = Sql.newInstance(conn)
     db.execute "PRAGMA memory_limit='-1'"
     tables.each { table, param ->
-        if (param.type == 'csv') {
-            csv2table(db, table, param)
-        } else if (param.type == 'sam') {
-            sam2table(db, table, param)
-        } else if (param.type == 'excel') {
-            excel2table(db, table, param)
+        db.execute "DROP TABLE IF EXISTS ${table}".toString()
+        if(param.containsKey("folder")&&param.folder!=null){
+            new File(param.folder).eachFile(){file ->
+                if (param.filter && file.name ==~ param.filter) {
+                    if (param.type == 'csv') {
+                        csv2table(db, table,file.absolutePath, param)
+                    } else if (param.type == 'sam') {
+                        sam2table(db, table,file.absolutePath, param)
+                    } else if (param.type == 'excel') {
+                        excel2table(db, table,file.absolutePath, param)
+                    }
+                }
+            }
+        }else{
+            if (param.type == 'csv') {
+                csv2table(db, table,param.path, param)
+            } else if (param.type == 'sam') {
+                sam2table(db, table,param.path, param)
+            } else if (param.type == 'excel') {
+                excel2table(db, table,param.path, param)
+            }
         }
     }
     // 任意のSQLを実行
     executeCustomSql(customQuery)
 }
 
-def csv2table(Sql db, String table, Map parameter) {
-    def file_path = new File(parameter.path).absolutePath.replaceAll('\\\\', '/')
+def csv2table(Sql db, String table,String filePath, Map parameter) {
+    def file_path = new File(filePath).absolutePath.replaceAll('\\\\', '/')
     def sql
+    // テーブルの存在を確認
+    def tableExists = db.firstRow("SELECT COUNT(*) AS count FROM information_schema.tables WHERE table_name = '${table}'".toString())?.count > 0
 
-    if (parameter.columns && parameter.type=='csv') {
-        // ヘッダーを含まないCSVファイルの場合
+    if (parameter.columns && parameter.type == 'csv') {
         String columns1 = parameter.columns.collect { it }.join(" VARCHAR, ") + " VARCHAR"
         String columns2 = parameter.columns.collect { it }.join(" , ")
-        sql = """CREATE TABLE ${table} (${columns1})"""
-        log(sql.toString())
-        db.execute "DROP TABLE IF EXISTS ${table}".toString()
-        db.execute sql.toString()
-
+        if(!tableExists){
+            // ヘッダーを含まないCSVファイルの場合
+            sql = """CREATE TABLE ${table} (${columns1})"""
+            log(sql.toString())
+            db.execute sql.toString()
+        }
         // CSVファイルのデータを挿入
         sql = """COPY ${table} (${columns2}) FROM '${file_path}' (HEADER FALSE, DELIMITER ',', QUOTE '"')"""
     } else {
-        // ヘッダーを含むCSVファイルの場合
-        sql = """CREATE TABLE ${table} AS
-            SELECT * FROM read_csv_auto('${file_path}', all_varchar=true)
-        """
+        if(!tableExists){
+            // ヘッダーを含むCSVファイルの場合
+            sql = """CREATE TABLE ${table} AS
+                SELECT * FROM read_csv_auto('${file_path}', all_varchar=true)
+            """
+            log(sql.toString())
+            db.execute sql.toString()
+        }else{
+            // CSVファイルのデータを挿入
+            sql = """COPY ${table} FROM '${file_path}' (HEADER FALSE, DELIMITER ',', QUOTE '"')"""
+        }
     }
 
-    log(sql.toString())
-    db.execute sql.toString()
     log("${table} imported:" + db.firstRow("SELECT COUNT(*) RECORD_COUNT FROM ${table}".toString()))
     db.eachRow("DESCRIBE ${table}".toString()) { row ->
         log(row.toString())
     }
 }
 
-def sam2table(Sql db, String table, Map parameter) {
-    def file_path = new File(parameter.path).absolutePath.replaceAll('\\\\', '/')
+def sam2table(Sql db, String table,String filePath, Map parameter) {
+    def file_path = new File(filePath).absolutePath.replaceAll('\\\\', '/')
     String encode = parameter.encode
     String filter_key = parameter.filter.key
     String filter_value = parameter.filter.value
@@ -255,14 +277,13 @@ def sam2table(Sql db, String table, Map parameter) {
         }
         out.flush()
     }
-    parameter.path = csv_path
     parameter.option = "quote='\"'"
-    csv2table(db, table, parameter)
+    csv2table(db, table,csv_path ,parameter)
     new File(csv_path).delete()
 }
 
-def excel2table(Sql db, String table, Map parameter) {
-    String filePath = new File(parameter.path).absolutePath.replaceAll('\\\\', '/')
+def excel2table(Sql db, String table,String filePath, Map parameter) {
+    filePath = new File(filePath).absolutePath.replaceAll('\\\\', '/')
     String sheetName = parameter.sheet
     int startRow = parameter.startRow ?: 0
     int startCol = parameter.startCol ?: 0
@@ -318,9 +339,8 @@ def excel2table(Sql db, String table, Map parameter) {
     }
 
     // CSVに変換したファイルをcsv2tableで読み込む
-    parameter.path = csvPath
     parameter.option = "quote='\"'"
-    csv2table(db, table, parameter)
+    csv2table(db, table,csvPath, parameter)
     new File(csvPath).delete()
 }
 

@@ -4,6 +4,7 @@
 	"gui": false,
 	"input": {
 		"tcat_atena":{ "path":"data/tcat_atena.csv", "type":"csv" },
+		"tcat_denwano":{ "folder":"data/", "filter":"tcat_denwano_.*csv" ,"type":"csv" },
 		"tcat_koza":{ "path":"data/tcat_koza.csv", "type":"csv" ,
 			"columns":[
 				"JICHTICD",
@@ -192,6 +193,15 @@
 				{ "name": "KOJINNO", "length": 30,"padding":"0","encode":"UTF-8" },
 				{ "name": "SHMIKNJ", "length": 100,"padding":" ","encode":"UTF-16" }
 			]
+		},
+		"out3":{
+			"query":[
+				"SELECT * ",
+				"FROM tcat_denwano"
+			],
+			"path": "out/sample-out3-$DATE$-$TIME$.csv",
+			"type":"csv",
+			"encoding": "UTF-8"
 		}
 	}
 }

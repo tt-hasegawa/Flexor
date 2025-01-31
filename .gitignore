@@ -2,3 +2,4 @@ sample/out/*
 sample/temp/*
 sample/logs/*
 Tools/lib/*
+Tools/jre/*

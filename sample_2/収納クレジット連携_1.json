@@ -1,0 +1,221 @@
+{
+	"title": "収納クレジット連携CSV生成サンプルツール",
+	"description": "このツールは収納業務で作られた連携ファイルをクレジット用に変換するツールです",
+	"gui": false,
+	"database":{
+		"class":"org.h2.Driver",
+		"url":"jdbc:h2:mem:db",
+		"init":"SET CACHE_SIZE 65536"
+	},
+	"input": {
+		"tcat_atena":{ "path":"data/ATENANO.csv", "type":"csv","encode":"UTF-8" },
+		"S01_HEADER":{
+			"path":"data/【口座振替データ見本】9999.txt",
+			"type":"sam",
+			"encode":"UTF-8",
+			"record_length":122,
+			"option":"",
+			"filter":{"key":"データ区分","value":"1"},
+				"columns": [
+				  {"name": "データ区分", "length": 1, "encode": "MS932"},
+				  {"name": "種別コード", "length": 2, "encode": "MS932"},
+				  {"name": "コード区分", "length": 1, "encode": "MS932"},
+				  {"name": "委託者コード", "length": 10, "encode": "MS932"},
+				  {"name": "委託者名", "length": 40, "encode": "MS932"},
+				  {"name": "引落日", "length": 4, "encode": "MS932"},
+				  {"name": "取引銀行番号", "length": 4, "encode": "MS932"},
+				  {"name": "取引銀行名", "length": 15, "encode": "MS932"},
+				  {"name": "取引支店番号", "length": 3, "encode": "MS932"},
+				  {"name": "取引支店名", "length": 15, "encode": "MS932"},
+				  {"name": "預金種目", "length": 1, "encode": "MS932"},
+				  {"name": "口座番号", "length": 7, "encode": "MS932"},
+				  {"name": "ダミー1", "length": 8, "encode": "MS932"},
+				  {"name": "ダミー2", "length": 9, "encode": "MS932"},
+				  {"name": "改行", "length": 1, "encode": "MS932"}
+				]
+		},
+		"S01_DATA":{
+			"path":"data/【口座振替データ見本】9999.txt",
+			"type":"sam",
+			"record_length":122,
+			"encode":"UTF-8",
+			"option":"",
+			"filter":{"key":"データ区分","value":"2"},
+				"columns": [
+				  {"name": "データ区分", "length": 1, "encode": "MS932"},
+				  {"name": "引落銀行番号", "length": 4, "encode": "MS932"},
+				  {"name": "引落銀行名", "length": 15, "encode": "MS932"},
+				  {"name": "引落支店番号", "length": 3, "encode": "MS932"},
+				  {"name": "引落支店名", "length": 15, "encode": "MS932"},
+				  {"name": "ダミー1", "length": 4, "encode": "MS932"},
+				  {"name": "預金種目", "length": 1, "encode": "MS932"},
+				  {"name": "口座番号", "length": 7, "encode": "MS932"},
+				  {"name": "預金者名", "length": 30, "encode": "MS932"},
+				  {"name": "引落金額", "length": 10, "encode": "MS932"},
+				  {"name": "新規コード", "length": 1, "encode": "MS932"},
+				  {"name": "賦課年度", "length": 2, "encode": "MS932"},
+				  {"name": "税目コード", "length": 2, "encode": "MS932"},
+				  {"name": "対象年度", "length": 2, "encode": "MS932"},
+				  {"name": "通知書番号", "length": 10, "encode": "MS932"},
+				  {"name": "期別コード", "length": 2, "encode": "MS932"},
+				  {"name": "スペース", "length": 2, "encode": "MS932"},
+				  {"name": "振替結果コード", "length": 1, "encode": "MS932"},
+				  {"name": "ダミー2", "length": 1, "encode": "MS932"},
+				  {"name": "ダミー3", "length": 4, "encode": "MS932"},
+				  {"name": "ダミー4", "length": 3, "encode": "MS932"},
+				  {"name": "改行", "length": 1, "encode": "MS932"}
+				]
+		},
+		"S01_TRAILER":{
+			"path":"data/【口座振替データ見本】9999.txt",
+			"type":"sam",
+			"record_length":122,
+			"encode":"UTF-8",
+			"option":"",
+			"filter":{"key":"データ区分","value":"8"},
+				"columns": [
+					{"name": "データ区分", "length": 1, "encode": "MS932"},
+					{"name": "合計件数", "length": 6, "encode": "MS932"},
+					{"name": "合計金額", "length": 12, "encode": "MS932"},
+					{"name": "振替済件数", "length": 6, "encode": "MS932"},
+					{"name": "振替済金額", "length": 12, "encode": "MS932"},
+					{"name": "振替不能件数", "length": 6, "encode": "MS932"},
+					{"name": "振替不能金額", "length": 12, "encode": "MS932"},
+					{"name": "予備", "length": 65, "encode": "MS932"},
+					{"name": "改行", "length": 1, "encode": "MS932"}
+				  ]
+		},
+		"S01_FOOTER":{
+			"path":"data/【口座振替データ見本】9999.txt",
+			"type":"sam",
+			"record_length":122,
+			"encode":"UTF-8",
+			"option":"",
+			"filter":{"key":"データ区分","value":"9"},
+				"columns": [
+					{"name": "データ区分", "length": 1, "encode": "MS932"},
+					{"name": "予備", "length": 119, "encode": "MS932"}
+				]
+		}
+	},
+	"customQuery":[
+	],
+	"output": {
+"out3":{
+			"query":[
+				"SELECT ",
+					"\"データ区分\"              as  データ区分,",
+					"\"引落銀行番号\"            as  金融機関コード,",
+					"\"引落銀行名\"              as  金融機関名,",
+					"\"引落支店番号\"            as  営業店コード,",
+					"(SELECT \"委託者コード\" FROM S01_HEADER LIMIT 1) as  委託者コード,",
+					"'      '                as  料金請求年月日,",
+					"'   '                   as  エラーコード,",
+					"'20'|| \"賦課年度\"         as  賦課年度,",
+					"'20'|| \"対象年度\"        as  対象年度,",
+					"\"税目コード\"             as  税目コード,",
+					"\"通知書番号\"              as  通知書番号,",
+					"\"期別コード\"              as  期別コード,",
+					"'                '      as  スペース,",
+					"\"引落金額\"                as  請求金額,",
+					"\"新規コード\"              as  新規コード,",
+					"(SELECT ATENANO FROM tcat_atena WHERE ",
+					"tcat_atena.FUKANND=S01_DATA.賦課年度 AND tcat_atena.TAISHONND=S01_DATA.対象年度 AND ",
+					"tcat_atena.ZIMKCD=S01_DATA.税目コード AND tcat_atena.TSCHSHNO = S01_DATA.通知書番号 AND ",
+					"tcat_atena.KIBETCD = S01_DATA.期別コード ) ",
+					" ||'                    '  as  顧客番号,",
+					"\"振替結果コード\"          as  振替結果コード,",
+					"' '                     as  \"西暦・和暦区分\",",
+					"'    '                  as  利用年月,",
+					"'   '                   as  予備",
+				"FROM S01_DATA"
+			],
+			"path": "out/sample-out3-$DATE$-$TIME$.csv",
+			"type":"sam",
+			"encoding": "MS932",
+			"lineSeparated":true,
+			"columns": [
+				{"name": "データ区分", "length": 1, "encode": "MS932", "padding": " "},
+				{"name": "金融機関コード", "length": 4, "encode": "MS932", "padding": " "},
+				{"name": "金融機関名", "length": 15, "encode": "MS932", "padding": " "},
+				{"name": "営業店コード", "length": 3, "encode": "MS932", "padding": " "},
+				{"name": "委託者コード", "length": 10, "encode": "MS932", "padding": " "},
+				{"name": "料金請求年月日", "length": 6, "encode": "MS932", "padding": " "},
+				{"name": "エラーコード", "length": 3, "encode": "MS932", "padding": " "},
+				{"name": "賦課年度", "length": 4, "encode": "MS932", "padding": " "},
+				{"name": "対象年度", "length": 4, "encode": "MS932", "padding": " "},
+				{"name": "税目コード", "length": 2, "encode": "MS932", "padding": " "},
+				{"name": "通知書番号", "length": 10, "encode": "MS932", "padding": " "},
+				{"name": "期別コード", "length": 2, "encode": "MS932", "padding": " "},
+				{"name": "スペース", "length": 16, "encode": "MS932", "padding": " "},
+				{"name": "請求金額", "length": 10, "encode": "MS932", "padding": " "},
+				{"name": "新規コード", "length": 1, "encode": "MS932", "padding": " "},
+				{"name": "顧客番号", "length": 20, "encode": "MS932", "padding": " "},
+				{"name": "振替結果コード", "length": 1, "encode": "MS932", "padding": " "},
+				{"name": "西暦・和暦区分", "length": 1, "encode": "MS932", "padding": " "},
+				{"name": "利用年月", "length": 4, "encode": "MS932", "padding": " "},
+				{"name": "予備", "length": 3, "encode": "MS932", "padding": " "}
+			],
+
+			"header":{
+				"query":[
+					"SELECT  ",
+					"\"データ区分\"    as データ区分, ",
+					"'21'             as 種別コード, ",
+					"\"コード区分\"    as コード区分, ",
+					"\"委託者コード\"  as 委託者コード, ",
+					"substr(\"委託者名\",1,19) || FORMATDATETIME(CURRENT_TIMESTAMP, 'yyyy.MM.dd HH.mm.ss') || ' ' as 委託者名, ",
+					"\"引落日\"        as 引落日, ",
+					"\"取引銀行番号\"  as 金融機関コード, ",
+					"\"取引銀行名\"    as 金融機関名, ",
+					"\"取引支店番号\"  as 営業店コード, ",
+					"\"取引支店名\"    as 営業店名, ",
+					"\"預金種目\"      as 預金種目, ",
+					"\"口座番号\"      as 口座番号, ",
+					"\"ダミー1\"        as 入金日, ",
+					"\"ダミー2\"        as 予備 ",
+					"FROM S01_HEADER "
+				],
+				"columns": [
+					{"name": "データ区分", "length": 1, "encode": "MS932", "padding": " "},
+					{"name": "種別コード", "length": 2, "encode": "MS932", "padding": " "},
+					{"name": "コード区分", "length": 1, "encode": "MS932", "padding": " "},
+					{"name": "委託者コード", "length": 10, "encode": "MS932", "padding": " "},
+					{"name": "委託者名", "length": 40, "encode": "MS932", "padding": " "},
+					{"name": "引落日", "length": 4, "encode": "MS932", "padding": " "},
+					{"name": "金融機関コード", "length": 4, "encode": "MS932", "padding": " "},
+					{"name": "金融機関名", "length": 15, "encode": "MS932", "padding": " "},
+					{"name": "営業店コード", "length": 3, "encode": "MS932", "padding": " "},
+					{"name": "営業店名", "length": 15, "encode": "MS932", "padding": " "},
+					{"name": "預金種目", "length": 1, "encode": "MS932", "padding": " "},
+					{"name": "口座番号", "length": 7, "encode": "MS932", "padding": " "},
+					{"name": "入金日", "length": 8, "encode": "MS932", "padding": " "},
+					{"name": "予備", "length": 9, "encode": "MS932", "padding": " "}
+				]
+			},
+			"trailer":{
+				"query":["select * FROM S01_TRAILER LIMIT 1"],
+				"columns": [
+					{"name": "データ区分", "length": 1, "encode": "MS932", "padding": " "},
+					{"name": "合計件数", "length": 6, "encode": "MS932", "padding": "0"},
+					{"name": "合計金額", "length": 12, "encode": "MS932", "padding": "0"},
+					{"name": "振替済件数", "length": 6, "encode": "MS932", "padding": "0"},
+					{"name": "振替済金額", "length": 12, "encode": "MS932", "padding": "0"},
+					{"name": "振替不能件数", "length": 6, "encode": "MS932", "padding": "0"},
+					{"name": "振替不能金額", "length": 12, "encode": "MS932", "padding": "0"},
+					{"name": "予備", "length": 65, "encode": "MS932", "padding": " "}
+				]
+			},
+			"footer":{
+				"query":["select * FROM S01_FOOTER LIMIT 1"],
+				"columns": [
+					{"name": "データ区分", "length": 1, "encode": "MS932", "padding": " "},
+					{"name": "予備", "length": 119, "encode": "MS932", "padding": " "}
+				]
+			}
+		}
+	}
+}
+
+
+

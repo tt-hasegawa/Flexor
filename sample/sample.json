@@ -1,6 +1,21 @@
 {
 	"title": "後期広域医療費通知用CSV生成サンプルツール",
 	"description": "このツールは後期広域用医療費通知CSVを生成するツールです",
+	"database-duc":{
+		"class":"org.duckdb.DuckDBDriver",
+		"url":"jdbc:duckdb:temp/db",
+		"init":"PRAGMA memory_limit='-1'"
+	},
+	"database":{
+		"class":"org.h2.Driver",
+		"url":"jdbc:h2:file:./temp/db",
+		"init":"SET CACHE_SIZE 65536"
+	},
+	"database-h2mem":{
+		"class":"org.h2.Driver",
+		"url":"jdbc:h2:mem:db",
+		"init":"SET CACHE_SIZE 65536"
+	},
 	"gui": false,
 	"input": {
 		"tcat_atena":{ "path":"data/tcat_atena.csv", "type":"csv" },
@@ -43,10 +58,10 @@
 				"path": "data/sample.xlsx",
 				"type": "excel",
 				"sheet": "Sheet1",
-				"startRow": 1,
+				"startRow": 0,
 				"startCol": 0,
 				"rowCount": 100,
-				"colCount": 5
+				"colCount": 4
 			},
 			"D61":{
 				"path":"data/JKD14X0010201_KD14F101N.sam",
@@ -120,8 +135,8 @@
 					{"name":"住所","length":120 ,"encode":"UTF-16"},
 					{"name":"氏名（漢字）","length":80 ,"encode":"UTF-16"},
 					{"name":"送付区分コード","length":1 ,"encode":"UTF-8"},
-					{"name":"外字桁あふれ区分コード(住所)","length":1 ,"encode":"UTF-8"},
-					{"name":"外字桁あふれ区分コード(氏名)","length":1 ,"encode":"UTF-8"},
+					{"name":"外字桁あふれ区分コード（住所)","length":1 ,"encode":"UTF-8"},
+					{"name":"外字桁あふれ区分コード（氏名)","length":1 ,"encode":"UTF-8"},
 					{"name":"抑止有無フラグ","length":1 ,"encode":"UTF-8"},
 					{"name":"通知日","length":8 ,"encode":"UTF-8"},
 					{"name":"通知日（元号）","length":4 ,"encode":"UTF-16"},
@@ -167,6 +182,8 @@
 			}
 	},
 	"customQuery":[
+		"DROP table tcat_atena2;",
+		"DROP table tcat_atena3;",
 		"create table tcat_atena2 as select kojinno,shmiknj from tcat_atena;",
 		"create table tcat_atena3 as select kojinno,shmiknj from tcat_atena;"
 	],
@@ -188,7 +205,7 @@
 			"path": "out/sample-out2-$DATE$-$TIME$.csv",
 			"type":"sam",
 			"encoding": "UTF-8",
-			"lineSepareted":false,
+			"lineSeparated":false,
 			"columns": [
 				{ "name": "KOJINNO", "length": 30,"padding":"0","encode":"UTF-8" },
 				{ "name": "SHMIKNJ", "length": 100,"padding":" ","encode":"UTF-16" }
@@ -200,6 +217,15 @@
 				"FROM tcat_denwano"
 			],
 			"path": "out/sample-out3-$DATE$-$TIME$.csv",
+			"type":"csv",
+			"encoding": "UTF-8"
+		},
+		"out4":{
+			"query":[
+				"SELECT * ",
+				"FROM tcat_atena"
+			],
+			"path": "out/sample-out4-$DATE$-$TIME$.csv",
 			"type":"csv",
 			"encoding": "UTF-8"
 		}

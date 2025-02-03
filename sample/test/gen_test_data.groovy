@@ -56,10 +56,10 @@ for(int i=0;i<10;i++){
 	new File("../data/tcat_denwano_${i}.csv").withWriter("UTF-8") { writer ->
 	    def resultSet = sql.rows('SELECT * FROM tcat_denwano WHERE ROWNUM = 1')
 	    def columnNames = resultSet[0].keySet()
-	    writer.writeLine(columnNames.join(','))
+	    writer.writeLine("\"" + columnNames.join('\",\"') + "\"" )
 	    def select = "SELECT * FROM tcat_denwano WHERE KOJINNO LIKE '%${i}' ".toString();
 	    sql.eachRow(select) { row ->
-		writer.writeLine(columnNames.collect { row[it] }.join(','))
+		writer.writeLine("\"" + columnNames.collect { row[it.replaceAll("\"","")].toString().replaceAll("\r","").replaceAll("\n","") }.join('\",\"') + "\"" )
 	    }
 	}
 }

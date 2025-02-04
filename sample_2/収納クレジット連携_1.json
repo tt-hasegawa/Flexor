@@ -101,7 +101,7 @@
 	"customQuery":[
 	],
 	"output": {
-"out3":{
+		"out3":{
 			"query":[
 				"SELECT ",
 					"\"データ区分\"              as  データ区分,",
@@ -119,16 +119,18 @@
 					"'                '      as  スペース,",
 					"\"引落金額\"                as  請求金額,",
 					"\"新規コード\"              as  新規コード,",
-					"(SELECT ATENANO FROM tcat_atena WHERE ",
-					"tcat_atena.FUKANND=S01_DATA.賦課年度 AND tcat_atena.TAISHONND=S01_DATA.対象年度 AND ",
-					"tcat_atena.ZIMKCD=S01_DATA.税目コード AND tcat_atena.TSCHSHNO = S01_DATA.通知書番号 AND ",
-					"tcat_atena.KIBETCD = S01_DATA.期別コード ) ",
-					" ||'                    '  as  顧客番号,",
+					"(CASE WHEN \"税目コード\" IN ('15','23','41') THEN ('30' || tcat_atena.ATENANO || '00000000') ",
+					"      WHEN \"税目コード\" IN ('46'          ) THEN ('40' || tcat_atena.ATENANO || '00000000') ",
+					"      ELSE                                         ('10' || tcat_atena.ATENANO || \"税目コード\" || '000000') ",
+					"END ) AS 顧客番号,",
 					"\"振替結果コード\"          as  振替結果コード,",
 					"' '                     as  \"西暦・和暦区分\",",
 					"'    '                  as  利用年月,",
 					"'   '                   as  予備",
-				"FROM S01_DATA"
+				"FROM S01_DATA LEFT OUTER JOIN tcat_atena ON (",
+				"     tcat_atena.FUKANND=S01_DATA.賦課年度 AND tcat_atena.TAISHONND=S01_DATA.対象年度 AND ",
+				"     tcat_atena.ZIMKCD=S01_DATA.税目コード AND tcat_atena.TSCHSHNO = S01_DATA.通知書番号 AND ",
+				"     tcat_atena.KIBETCD = S01_DATA.期別コード)"
 			],
 			"path": "out/sample-out3-$DATE$-$TIME$.csv",
 			"type":"sam",
@@ -160,20 +162,20 @@
 			"header":{
 				"query":[
 					"SELECT  ",
-					"\"データ区分\"    as データ区分, ",
-					"'21'             as 種別コード, ",
-					"\"コード区分\"    as コード区分, ",
-					"\"委託者コード\"  as 委託者コード, ",
-					"substr(\"委託者名\",1,19) || FORMATDATETIME(CURRENT_TIMESTAMP, 'yyyy.MM.dd HH.mm.ss') || ' ' as 委託者名, ",
-					"\"引落日\"        as 引落日, ",
-					"\"取引銀行番号\"  as 金融機関コード, ",
-					"\"取引銀行名\"    as 金融機関名, ",
-					"\"取引支店番号\"  as 営業店コード, ",
-					"\"取引支店名\"    as 営業店名, ",
-					"\"預金種目\"      as 預金種目, ",
-					"\"口座番号\"      as 口座番号, ",
-					"\"ダミー1\"        as 入金日, ",
-					"\"ダミー2\"        as 予備 ",
+					"\"データ区分\"     as データ区分, ",
+					"'21'               as 種別コード, ",
+					"'0'                as コード区分, ",
+					"\"委託者コード\"   as 委託者コード, ",
+					"substr(\"委託者名\",1,20) || FORMATDATETIME(CURRENT_TIMESTAMP, 'yyyy.MM.dd HH.mm.ss') || ' ' as 委託者名, ",
+					"\"引落日\"         as 引落日, ",
+					"'    '             as 金融機関コード, ",
+					"'               '  as 金融機関名, ",
+					"'   '              as 営業店コード, ",
+					"'               '  as 営業店名, ",
+					"' '                as 預金種目, ",
+					"'       '          as 口座番号, ",
+					"'        '         as 入金日, ",
+					"'         '        as 予備 ",
 					"FROM S01_HEADER "
 				],
 				"columns": [
